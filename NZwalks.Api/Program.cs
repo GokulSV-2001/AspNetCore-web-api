@@ -6,6 +6,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,9 +33,24 @@ builder.Services.AddScoped<IWalkRepository,SQLWalkRepository>();
 
 
 
-// add swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+//Register Identity
+builder.Services.AddIdentityCore<IdentityUser>()
+    .AddRoles<IdentityRole>()
+    .AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("NZwalks")
+    .AddEntityFrameworkStores<NZwalkAuthDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.Configure<IdentityOptions>(options=>{
+    options.Password.RequireUppercase=false;
+    options.Password.RequireLowercase=false;
+    options.Password.RequireDigit=false;
+    options.Password.RequiredUniqueChars=1;
+    options.Password.RequireNonAlphanumeric=false;
+    options.Password.RequiredLength=6;
+}
+
+);
 
 //adding JWT authenticatio with JWT parameter
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -52,6 +68,10 @@ options.TokenValidationParameters=new TokenValidationParameters
     )
 
 });
+
+// add swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 
